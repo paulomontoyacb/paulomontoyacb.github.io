@@ -1,0 +1,323 @@
+body {
+    margin: 0;
+    min-height: 100vh;
+    background: linear-gradient(180deg, #f6f3ec 0%, #ddd4c4 100%);
+    font-family: "Trebuchet MS", Verdana, sans-serif;
+    color: #2a2118;
+}
+
+.app-layout {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(320px, 520px));
+    justify-content: center;
+    align-items: center;
+    gap: 24px;
+    padding: 24px;
+    box-sizing: border-box;
+}
+
+.metronomo,
+.accordatore {
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    padding: 28px;
+    border-radius: 24px;
+    background: rgba(255, 252, 245, 0.92);
+    box-shadow: 0 20px 50px rgba(78, 57, 31, 0.18);
+    text-align: center;
+    box-sizing: border-box;
+}
+
+.metronomo {
+    transition: background-color 0.12s ease;
+}
+
+.metronomo.attivo-battere {
+    background: rgba(203, 125, 89, 0.97);
+}
+
+.metronomo.attivo-tempo {
+    background: rgba(240, 194, 89, 0.97);
+}
+
+h1 {
+    margin: 0 0 14px;
+    font-size: 2rem;
+    letter-spacing: 0.04em;
+}
+
+.contatore {
+    margin: 8px 0 10px;
+    font-size: clamp(8rem, 24vw, 14rem);
+    font-weight: bold;
+    line-height: 1;
+    color: #b64522;
+    transition: transform 0.1s ease, color 0.1s ease;
+}
+
+.sotto-contatore {
+    display: none;
+}
+
+.contatore.attivo {
+    transform: scale(1.08);
+    color: #d96a1f;
+}
+
+.bpm-box {
+    display: grid;
+    gap: 14px;
+    margin-bottom: 20px;
+    justify-items: center;
+}
+
+.opzioni {
+    display: grid;
+    gap: 12px;
+    margin-top: 10px;
+    text-align: left;
+    width: 100%;
+}
+
+.opzione-riga {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.opzione-riga label {
+    font-weight: bold;
+}
+
+.selettore-tempo {
+    padding: 10px 12px;
+    border: 2px solid #b9aa95;
+    border-radius: 12px;
+    font-size: 1rem;
+    background: #fffaf1;
+    color: #2a2118;
+}
+
+.check-accento {
+    width: 18px;
+    height: 18px;
+    accent-color: #b64522;
+}
+
+.tempo-controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    width: 100%;
+}
+
+.bpm-value {
+    font-size: clamp(2.7rem, 11vw, 3.3rem);
+    font-weight: bold;
+    line-height: 1;
+    letter-spacing: 0.02em;
+}
+
+.tempo-input {
+    width: 110px;
+    padding: 10px 12px;
+    border: 2px solid #b9aa95;
+    border-radius: 12px;
+    font-size: 1.1rem;
+    text-align: center;
+    background: #fffaf1;
+    flex-shrink: 0;
+    appearance: textfield;
+    -moz-appearance: textfield;
+}
+
+.tempo-input::-webkit-outer-spin-button,
+.tempo-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.slider {
+    width: 100%;
+    accent-color: #b64522;
+    flex: 1;
+}
+
+.controlli,
+.accordatore-controlli {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 18px;
+}
+
+.controlli input[type='button'],
+.accordatore-controlli button {
+    padding: 12px 18px;
+    border: none;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    color: #fffaf1;
+    background: #7c3f17;
+}
+
+.accordatore {
+    display: grid;
+    gap: 18px;
+    align-content: start;
+}
+
+.accordatore-display {
+    display: grid;
+    gap: 10px;
+}
+
+.accordatore-nota {
+    font-size: clamp(4.8rem, 18vw, 7rem);
+    font-weight: bold;
+    line-height: 0.95;
+    color: #27445c;
+}
+
+.accordatore-freq {
+    font-size: clamp(2.1rem, 9vw, 3rem);
+    font-weight: bold;
+    line-height: 1;
+}
+
+.accordatore-cents {
+    font-size: 1.5rem;
+    color: #6e5a45;
+}
+
+.needle-wrap {
+    display: grid;
+    gap: 8px;
+}
+
+.needle-scale {
+    position: relative;
+    height: 28px;
+    border-radius: 999px;
+    background: #efe7d8;
+    border: 1px solid #c8b79c;
+    overflow: hidden;
+}
+
+.needle-zones {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    z-index: 1;
+}
+
+.needle-zones div {
+    flex: 1;
+}
+
+.needle-zones .left,
+.needle-zones .right {
+    background: rgba(182, 69, 34, 0.12);
+}
+
+.needle-zones .center {
+    background: rgba(93, 153, 93, 0.18);
+}
+
+.needle-center {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    transform: translateX(-50%);
+    width: 2px;
+    height: 100%;
+    background: #2a2118;
+    opacity: 0.9;
+    z-index: 3;
+}
+
+.needle {
+    position: absolute;
+    top: 2px;
+    width: 16px;
+    height: 22px;
+    border-radius: 999px;
+    background: #4c79a8;
+    transform: translateX(-50%);
+    z-index: 2;
+    transition: left 0.08s linear;
+}
+
+.scale-labels {
+    display: flex;
+    justify-content: space-between;
+    color: #6e5a45;
+    font-size: 0.9rem;
+    padding: 0 2px;
+}
+
+.accordatore-stato {
+    min-height: 1.6em;
+    font-size: 1rem;
+    color: #6e5a45;
+}
+
+.accordatore-meta {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 16px;
+    padding-top: 14px;
+    border-top: 1px solid rgba(110, 90, 69, 0.2);
+    font-size: 0.95rem;
+    text-align: left;
+}
+
+.accordatore-meta strong {
+    color: #2a2118;
+}
+
+.accordatore-hint {
+    margin: 0;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    color: #6e5a45;
+}
+
+@media (max-width: 980px) {
+    .app-layout {
+        grid-template-columns: minmax(280px, 620px);
+        align-items: start;
+    }
+
+    .contatore {
+        font-size: clamp(7rem, 30vw, 12rem);
+    }
+}
+
+@media (max-width: 640px) {
+    .app-layout {
+        padding: 16px;
+        gap: 16px;
+    }
+
+    .metronomo,
+    .accordatore {
+        padding: 22px 18px;
+    }
+
+    .accordatore-meta {
+        grid-template-columns: 1fr;
+    }
+
+    .accordatore-nota {
+        font-size: clamp(4rem, 22vw, 5.8rem);
+    }
+}

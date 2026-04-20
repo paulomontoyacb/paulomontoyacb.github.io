@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Metronomo e Accordatore</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<main class="app-layout">
+    <section class="metronomo">
+        <h1>Metronomo</h1>
+        <div class="contatore" id="contatoreVisivo">1</div>
+        <div class="sotto-contatore" id="sottoContatoreVisivo"></div>
+
+        <div class="bpm-box">
+            <div class="bpm-value"><span id="bpmValue">60</span> BPM</div>
+            <div class="tempo-controls">
+                <input type="range" id="bpmSlider" class="slider" min="30" max="250" value="60">
+                <input type="text" id="bpmInput" class="tempo-input" inputmode="numeric" pattern="[0-9]*" value="60">
+            </div>
+            <div class="opzioni">
+                <div class="opzione-riga">
+                    <label for="timeSignature">Tempo</label>
+                    <select id="timeSignature" class="selettore-tempo">
+                        <option value="2">2/4</option>
+                        <option value="3">3/4</option>
+                        <option value="4" selected>4/4</option>
+                        <option value="5">5/4</option>
+                        <option value="6">6/4</option>
+                        <option value="7">7/4</option>
+                    </select>
+                </div>
+                <div class="opzione-riga">
+                    <label for="accentoToggle">Battere</label>
+                    <input type="checkbox" id="accentoToggle" class="check-accento" checked>
+                </div>
+                <div class="opzione-riga">
+                    <label for="subdivisionSelect">Pattern ritmico</label>
+                    <select id="subdivisionSelect" class="selettore-tempo">
+                        <option value="1" selected>Quarti</option>
+                        <option value="2">Ottavi</option>
+                        <option value="3">Terzina</option>
+                        <option value="4">Sedicesimi</option>
+                        <option value="5">Quintine</option>
+                        <option value="6">Sestine</option>
+                        <option value="7">Settimine</option>
+                    </select>
+                </div>
+                <div class="opzione-riga">
+                    <label for="coloriToggle">Colori visivi</label>
+                    <input type="checkbox" id="coloriToggle" class="check-accento" checked>
+                </div>
+            </div>
+        </div>
+
+        <div class="controlli">
+            <input type="button" value="Accendi metronomo" id="metronomeToggleBtn">
+        </div>
+    </section>
+
+    <section class="accordatore">
+        <h1>Accordatore</h1>
+        <div class="accordatore-display">
+            <div class="accordatore-nota" id="tunerNote">--</div>
+            <div class="accordatore-freq" id="tunerFreq">0.00 Hz</div>
+            <div class="accordatore-cents" id="tunerCents">0.0 cent</div>
+        </div>
+
+        <div class="needle-wrap">
+            <div class="needle-scale">
+                <div class="needle-zones">
+                    <div class="left"></div>
+                    <div class="center"></div>
+                    <div class="right"></div>
+                </div>
+                <div class="needle-center"></div>
+                <div class="needle" id="tunerNeedle" style="left: 50%;"></div>
+            </div>
+            <div class="scale-labels">
+                <span>-50</span>
+                <span>-25</span>
+                <span>0</span>
+                <span>+25</span>
+                <span>+50</span>
+            </div>
+        </div>
+
+        <div class="accordatore-controlli">
+            <button type="button" id="tunerToggleBtn">Attiva microfono</button>
+        </div>
+
+        <div class="opzioni accordatore-opzioni">
+            <div class="opzione-riga">
+                <label for="tuningReference">Accordatura</label>
+                <select id="tuningReference" class="selettore-tempo">
+                    <option value="440" selected>La = 440 Hz</option>
+                    <option value="442">La = 442 Hz</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="accordatore-stato" id="tunerStatus">Premi "Attiva microfono".</div>
+
+        <div class="accordatore-meta">
+            <div>Nota target: <strong id="tunerTargetNote">--</strong></div>
+            <div>Target Hz: <strong id="tunerTargetFreq">--</strong></div>
+            <div>Confidence: <strong id="tunerClarity">--</strong></div>
+            <div>Livello: <strong id="tunerLevel">--</strong></div>
+            <div>Range auto: <strong id="tunerRange">--</strong></div>
+            <div>Stato: <strong id="tunerLockState">--</strong></div>
+        </div>
+
+        <p class="accordatore-hint">
+            Usa preferibilmente un microfono esterno. Per il tuner e' meglio aprire la pagina da localhost o HTTPS.
+        </p>
+    </section>
+</main>
+
+<script src="metro.js"></script>
+<script src="accordatore.js"></script>
+
+</body>
+</html>
