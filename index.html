@@ -3,14 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Metronomo e Accordatore</title>
+    <title>MetroTuner</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
+<header class="site-header">
+    <div class="site-heading-row">
+        <h1 class="site-title">MetroTuner</h1>
+    </div>
+</header>
+
 <main class="app-layout">
     <section class="metronomo">
-        <h1>Metronomo</h1>
+        <h2 class="panel-title">Metronomo</h2>
         <div class="contatore" id="contatoreVisivo">1</div>
         <div class="sotto-contatore" id="sottoContatoreVisivo"></div>
 
@@ -61,7 +67,7 @@
     </section>
 
     <section class="accordatore">
-        <h1>Accordatore</h1>
+        <h2 class="panel-title">Accordatore</h2>
         <div class="accordatore-display">
             <div class="accordatore-nota" id="tunerNote">--</div>
             <div class="accordatore-freq" id="tunerFreq">0.00 Hz</div>
@@ -112,11 +118,17 @@
             <div>Stato: <strong id="tunerLockState">--</strong></div>
         </div>
 
-        <p class="accordatore-hint">
-            Usa preferibilmente un microfono esterno. Per il tuner e' meglio aprire la pagina da localhost o HTTPS.
-        </p>
+        <div class="accordatore-footer">
+            <p class="accordatore-hint">
+                Usa preferibilmente un microfono esterno.
+            </p>
+        </div>
     </section>
 </main>
+
+<footer class="site-footer">
+    <p class="site-credit site-credit-footer">Creato da Paulo Montoya</p>
+</footer>
 
 <script src="metro.js"></script>
 <script src="accordatore.js"></script>
