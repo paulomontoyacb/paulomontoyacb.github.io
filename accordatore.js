@@ -11,10 +11,56 @@ const tunerLevelEl = document.getElementById('tunerLevel');
 const tunerRangeEl = document.getElementById('tunerRange');
 const tunerLockStateEl = document.getElementById('tunerLockState');
 const tuningReference = document.getElementById('tuningReference');
+const tunerModeSelect = document.getElementById('tunerMode');
 
 const NOTE_NAMES = ['Do', 'Do#', 'Re', 'Re#', 'Mi', 'Fa', 'Fa#', 'Sol', 'Sol#', 'La', 'La#', 'Si'];
-const MAX_HISTORY = 7;
-const MAX_STABILITY_HISTORY = 5;
+
+const TUNER_MODES = {
+    standard: {
+        name: 'standard',
+        historySize: 4,
+        stabilityHistorySize: 3,
+        attackHoldFramesLow: 1,
+        attackHoldFramesHigh: 0,
+        uiUpdateEveryLow: 1,
+        uiUpdateEveryHigh: 1,
+        minConfidenceLow: 0.60,
+        minConfidenceMid: 0.58,
+        minConfidenceHigh: 0.62,
+        minRmsLow: 0.0010,
+        minRmsMid: 0.0008,
+        minRmsHigh: 0.0005,
+        lowCutoffHz: 180,
+        lockRequirementLow: 2,
+        lockRequirementMid: 1,
+        lockRequirementHigh: 1,
+        stabilityDevLow: 4.0,
+        stabilityDevMid: 5.0,
+        stabilityDevHigh: 6.0
+    },
+    bassi: {
+        name: 'bassi',
+        historySize: 6,
+        stabilityHistorySize: 5,
+        attackHoldFramesLow: 2,
+        attackHoldFramesHigh: 1,
+        uiUpdateEveryLow: 1,
+        uiUpdateEveryHigh: 1,
+        minConfidenceLow: 0.48,
+        minConfidenceMid: 0.56,
+        minConfidenceHigh: 0.64,
+        minRmsLow: 0.0008,
+        minRmsMid: 0.0008,
+        minRmsHigh: 0.0006,
+        lowCutoffHz: 140,
+        lockRequirementLow: 3,
+        lockRequirementMid: 2,
+        lockRequirementHigh: 1,
+        stabilityDevLow: 3.2,
+        stabilityDevMid: 4.2,
+        stabilityDevHigh: 5.5
+    }
+};
 
 let tunerAudioContext = null;
 let tunerMediaStream = null;
@@ -33,6 +79,16 @@ let frameCounter = 0;
 let lastDisplayedFrequency = null;
 let attackHoldFrames = 0;
 let tuningA4 = 440;
+let currentMode = getSelectedModeName();
+
+function getSelectedModeName() {
+    const value = tunerModeSelect?.value;
+    return value === 'bassi' ? 'bassi' : 'standard';
+}
+
+function getModeConfig() {
+    return TUNER_MODES[currentMode] || TUNER_MODES.standard;
+}
 
 function clamp(value, min, max) {
     return Math.max(min, Math.min(max, value));
@@ -104,43 +160,47 @@ function clearArray(arr) {
     arr.length = 0;
 }
 
-function getAutoRange(freq) {
+function getRangeConfig(freq) {
+    const mode = getModeConfig();
+
     if (freq < 180) {
         return {
             name: 'grave',
-            minConfidence: 0.4,
-            minRms: 0.0009,
-            uiUpdateEvery: 2
+            minConfidence: mode.minConfidenceLow,
+            minRms: mode.minRmsLow,
+            uiUpdateEvery: mode.uiUpdateEveryLow
         };
     }
 
     if (freq < 1200) {
         return {
             name: 'medio',
-            minConfidence: 0.55,
-            minRms: 0.0008,
-            uiUpdateEvery: 1
+            minConfidence: mode.minConfidenceMid,
+            minRms: mode.minRmsMid,
+            uiUpdateEvery: mode.uiUpdateEveryHigh
         };
     }
 
     return {
         name: 'acuto',
-        minConfidence: 0.62,
-        minRms: 0.0005,
-        uiUpdateEvery: 1
+        minConfidence: mode.minConfidenceHigh,
+        minRms: mode.minRmsHigh,
+        uiUpdateEvery: mode.uiUpdateEveryHigh
     };
 }
 
 function getLockRequirement(freq) {
+    const mode = getModeConfig();
+
     if (freq < 180) {
-        return 3;
+        return mode.lockRequirementLow;
     }
 
-    if (freq < 250) {
-        return 2;
+    if (freq < 300) {
+        return mode.lockRequirementMid;
     }
 
-    return 2;
+    return mode.lockRequirementHigh;
 }
 
 function updateNeedle(cents) {
@@ -162,17 +222,21 @@ function resetMeta() {
     tunerLockStateEl.textContent = '--';
 }
 
-function resetTunerState() {
+function resetTrackingState() {
     clearArray(recentFrequencies);
     clearArray(recentCents);
     clearArray(pitchStabilityHistory);
-    displayedNote = '--';
-    displayedTargetFreq = null;
     consecutiveSameNote = 0;
     lastCandidateNote = null;
     frameCounter = 0;
-    lastDisplayedFrequency = null;
     attackHoldFrames = 0;
+}
+
+function resetTunerState() {
+    resetTrackingState();
+    displayedNote = '--';
+    displayedTargetFreq = null;
+    lastDisplayedFrequency = null;
     tunerNoteEl.textContent = '--';
     tunerFreqEl.textContent = '0.00 Hz';
     tunerCentsEl.textContent = '0.0 cent';
@@ -221,9 +285,10 @@ function commitDisplay(freq, noteInfo, clarity, rms, rangeName, lockState, displ
 }
 
 function isPitchStable(freq) {
-    pushLimited(pitchStabilityHistory, freq, MAX_STABILITY_HISTORY);
+    const mode = getModeConfig();
+    pushLimited(pitchStabilityHistory, freq, mode.stabilityHistorySize);
 
-    if (pitchStabilityHistory.length < 3) {
+    if (pitchStabilityHistory.length < Math.min(3, mode.stabilityHistorySize)) {
         return false;
     }
 
@@ -231,14 +296,14 @@ function isPitchStable(freq) {
     const med = median(pitchStabilityHistory);
 
     if (med < 180) {
-        return dev < 4.2;
+        return dev < mode.stabilityDevLow;
     }
 
     if (med < 300) {
-        return dev < 4.8;
+        return dev < mode.stabilityDevMid;
     }
 
-    return dev < 6.0;
+    return dev < mode.stabilityDevHigh;
 }
 
 function processPitchEstimate(pitch, clarity, rms, isAttack = false) {
@@ -247,12 +312,13 @@ function processPitchEstimate(pitch, clarity, rms, isAttack = false) {
         return;
     }
 
-    if (pitch < 25 || pitch > 6000) {
+    if (pitch < 20 || pitch > 6000) {
         resetUI('Pitch fuori range.');
         return;
     }
 
-    const autoRange = getAutoRange(pitch);
+    const autoRange = getRangeConfig(pitch);
+    const mode = getModeConfig();
 
     if (clarity < autoRange.minConfidence) {
         resetUI(`Pitch incerto (${clarity.toFixed(3)}).`);
@@ -265,7 +331,7 @@ function processPitchEstimate(pitch, clarity, rms, isAttack = false) {
     }
 
     if (isAttack) {
-        attackHoldFrames = pitch < 180 ? 2 : 1;
+        attackHoldFrames = pitch < 180 ? mode.attackHoldFramesLow : mode.attackHoldFramesHigh;
     }
 
     if (attackHoldFrames > 0) {
@@ -278,7 +344,7 @@ function processPitchEstimate(pitch, clarity, rms, isAttack = false) {
         return;
     }
 
-    pushLimited(recentFrequencies, pitch, MAX_HISTORY);
+    pushLimited(recentFrequencies, pitch, mode.historySize);
     const stableFreq = median(recentFrequencies);
 
     if (!stableFreq) {
@@ -287,7 +353,8 @@ function processPitchEstimate(pitch, clarity, rms, isAttack = false) {
     }
 
     const noteInfo = frequencyToNote(stableFreq);
-    pushLimited(recentCents, noteInfo.cents, MAX_HISTORY);
+
+    pushLimited(recentCents, noteInfo.cents, mode.historySize);
     const stableCents = median(recentCents) ?? noteInfo.cents;
 
     if (displayedNote === '--' && recentFrequencies.length >= 2) {
@@ -346,6 +413,17 @@ function processPitchEstimate(pitch, clarity, rms, isAttack = false) {
     }
 }
 
+function sendModeToWorklet() {
+    if (!tunerWorkletNode) {
+        return;
+    }
+
+    tunerWorkletNode.port.postMessage({
+        type: 'setMode',
+        mode: currentMode
+    });
+}
+
 async function startTuner() {
     if (tunerAudioContext) {
         return;
@@ -374,7 +452,8 @@ async function startTuner() {
         tunerSourceNode = tunerAudioContext.createMediaStreamSource(tunerMediaStream);
         tunerWorkletNode = new AudioWorkletNode(tunerAudioContext, 'pitch-processor', {
             processorOptions: {
-                sampleRate: tunerAudioContext.sampleRate
+                sampleRate: tunerAudioContext.sampleRate,
+                mode: currentMode
             }
         });
 
@@ -389,8 +468,9 @@ async function startTuner() {
         silentGain.gain.value = 0;
         tunerWorkletNode.connect(silentGain).connect(tunerAudioContext.destination);
 
+        sendModeToWorklet();
         aggiornaBottoneMicrofono();
-        tunerStatusEl.textContent = 'Ascolto in corso...';
+        tunerStatusEl.textContent = `Ascolto in corso (${currentMode}).`;
     } catch (error) {
         console.error(error);
         tunerStatusEl.textContent = 'Errore nell\'avvio del microfono.';
@@ -440,6 +520,34 @@ async function stopTuner(resetMessage = true) {
     }
 }
 
+function applyModeChange() {
+    currentMode = getSelectedModeName();
+    resetTrackingState();
+
+    if (lastDisplayedFrequency != null) {
+        const noteInfo = frequencyToNote(lastDisplayedFrequency);
+        const displayedCents = 1200 * Math.log2(lastDisplayedFrequency / noteInfo.targetFreq);
+
+        commitDisplay(
+            lastDisplayedFrequency,
+            noteInfo,
+            Number(tunerClarityEl.textContent) || 0,
+            Number(tunerLevelEl.textContent) || 0,
+            tunerRangeEl.textContent === '--' ? 'medio' : tunerRangeEl.textContent,
+            'cambio modo',
+            displayedCents
+        );
+    } else {
+        resetUI(`Modalità ${currentMode} selezionata.`);
+    }
+
+    sendModeToWorklet();
+
+    if (tunerAudioContext) {
+        tunerStatusEl.textContent = `Ascolto in corso (${currentMode}).`;
+    }
+}
+
 resetTunerState();
 tunerStatusEl.textContent = 'Premi "Attiva microfono".';
 aggiornaBottoneMicrofono();
@@ -470,3 +578,7 @@ tuningReference.addEventListener('change', () => {
         );
     }
 });
+
+if (tunerModeSelect) {
+    tunerModeSelect.addEventListener('change', applyModeChange);
+}
