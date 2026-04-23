@@ -175,11 +175,11 @@ function scheduleBeat(when, beatNumber, subdivisionNumber) {
     const inizioBattito = subdivisionNumber === 1;
 
     if (inizioBattito && battereAttivo && beatNumber === 1) {
-        riproduciColpoSchedulato(1760, 0.66, when);
+        riproduciColpoSchedulato(1760, 0.88, when);
     } else if (inizioBattito) {
-        riproduciColpoSchedulato(880, 0.54, when);
+        riproduciColpoSchedulato(880, 0.72, when);
     } else {
-        riproduciColpoSchedulato(660, 0.33, when);
+        riproduciColpoSchedulato(660, 0.44, when);
     }
 
     aggiornaUiSchedulata(when, beatNumber, subdivisionNumber);
