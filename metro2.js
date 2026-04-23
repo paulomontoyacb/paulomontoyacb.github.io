@@ -9,9 +9,12 @@ let battereAttivo = true;
 let coloriAttivi = true;
 let metronomoAttivo = false;
 let avvioCorrente = 0;
+let metronomeVolume = 0.55;
 
 let schedulerInterval = null;
 let uiTimeouts = [];
+let scheduledUiEvents = [];
+let uiFrameId = null;
 
 let nextNoteTime = 0;
 let currentBeatNumber = 1;
@@ -19,6 +22,8 @@ let currentSubdivision = 1;
 
 const lookahead = 20;          // ms
 const scheduleAheadTime = 0.12; // sec
+const uiFrameLookaheadMs = 8;
+const visualAnticipoMs = 22;
 
 const metronomeToggleBtn = document.getElementById('metronomeToggleBtn');
 const metronomoBox = document.querySelector('.metronomo');
@@ -26,11 +31,12 @@ const bpmSlider = document.getElementById('bpmSlider');
 const bpmInput = document.getElementById('bpmInput');
 const bpmValue = document.getElementById('bpmValue');
 const contatoreVisivo = document.getElementById('contatoreVisivo');
-const sottoContatoreVisivo = document.getElementById('sottoContatoreVisivo');
 const timeSignature = document.getElementById('timeSignature');
 const accentoToggle = document.getElementById('accentoToggle');
 const coloriToggle = document.getElementById('coloriToggle');
 const subdivisionSelect = document.getElementById('subdivisionSelect');
+const metronomeVolumeSlider = document.getElementById('metronomeVolume');
+const metronomeVolumeValue = document.getElementById('metronomeVolumeValue');
 
 function aggiornaVisualeBpm(nuovoBpm) {
     bpm = Number(nuovoBpm);
@@ -67,7 +73,13 @@ function aggiornaSuddivisione(nuovaSuddivisione) {
 
 function aggiornaDisplayConteggio() {
     contatoreVisivo.textContent = contatore;
-    sottoContatoreVisivo.textContent = suddivisione > 1 ? `${currentSubdivision}/${suddivisione}` : '';
+}
+
+function aggiornaVolumeMetronomo(valore) {
+    const normalized = Math.max(0, Math.min(100, Number(valore))) / 100;
+    metronomeVolume = normalized;
+    metronomeVolumeSlider.value = Math.round(normalized * 100);
+    metronomeVolumeValue.textContent = `${Math.round(normalized * 100)}%`;
 }
 
 function resetUIState() {
@@ -80,20 +92,27 @@ function clearAllUiTimeouts() {
     uiTimeouts = [];
 }
 
+function clearScheduledUiEvents() {
+    scheduledUiEvents = [];
+}
+
+function stopUiLoop() {
+    if (uiFrameId !== null) {
+        cancelAnimationFrame(uiFrameId);
+        uiFrameId = null;
+    }
+}
+
 function triggerContatoreAnimation() {
     contatoreVisivo.classList.remove('attivo');
+    void contatoreVisivo.offsetWidth;
+    contatoreVisivo.classList.add('attivo');
 
-    requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-            contatoreVisivo.classList.add('attivo');
+    const t = setTimeout(() => {
+        contatoreVisivo.classList.remove('attivo');
+    }, 120);
 
-            const t = setTimeout(() => {
-                contatoreVisivo.classList.remove('attivo');
-            }, 120);
-
-            uiTimeouts.push(t);
-        });
-    });
+    uiTimeouts.push(t);
 }
 
 function triggerBoxLight(isFirstBeat) {
@@ -107,15 +126,14 @@ function triggerBoxLight(isFirstBeat) {
     const className = isFirstBeat ? 'attivo-battere' : 'attivo-tempo';
     const duration = isFirstBeat ? 250 : 150;
 
-    requestAnimationFrame(() => {
-        metronomoBox.classList.add(className);
+    void metronomoBox.offsetWidth;
+    metronomoBox.classList.add(className);
 
-        const t = setTimeout(() => {
-            metronomoBox.classList.remove('attivo-battere', 'attivo-tempo');
-        }, duration);
+    const t = setTimeout(() => {
+        metronomoBox.classList.remove('attivo-battere', 'attivo-tempo');
+    }, duration);
 
-        uiTimeouts.push(t);
-    });
+    uiTimeouts.push(t);
 }
 
 function riproduciColpoSchedulato(frequenza, volumePicco, when) {
@@ -131,7 +149,7 @@ function riproduciColpoSchedulato(frequenza, volumePicco, when) {
     oscillatore.frequency.setValueAtTime(frequenza, when);
 
     gainNode.gain.setValueAtTime(0.0001, when);
-    gainNode.gain.exponentialRampToValueAtTime(volumePicco, when + attack);
+    gainNode.gain.exponentialRampToValueAtTime(Math.max(0.0001, volumePicco * metronomeVolume), when + attack);
     gainNode.gain.exponentialRampToValueAtTime(0.0001, stopTime);
 
     oscillatore.connect(gainNode);
@@ -146,29 +164,74 @@ function riproduciColpoSchedulato(frequenza, volumePicco, when) {
     }, { once: true });
 }
 
-function aggiornaUiSchedulata(when, beatNumber, subdivisionNumber) {
-    const delayMs = Math.max(0, (when - context.currentTime) * 1000);
+function getPerformanceTimeForAudioTime(audioTime) {
+    if (typeof context.getOutputTimestamp === 'function') {
+        const timestamp = context.getOutputTimestamp();
+
+        if (
+            Number.isFinite(timestamp?.contextTime) &&
+            Number.isFinite(timestamp?.performanceTime)
+        ) {
+            return timestamp.performanceTime + ((audioTime - timestamp.contextTime) * 1000);
+        }
+    }
+
+    return performance.now() + ((audioTime - context.currentTime) * 1000);
+}
+
+function processScheduledUiEvent(beatNumber, subdivisionNumber) {
     const inizioBattito = subdivisionNumber === 1;
     const isFirstBeat = inizioBattito && beatNumber === 1;
 
-    const t = setTimeout(() => {
-        if (!metronomoAttivo) return;
+    if (!metronomoAttivo) {
+        return;
+    }
 
-        contatore = beatNumber;
+    contatore = beatNumber;
+    contatoreVisivo.textContent = beatNumber;
 
-        contatoreVisivo.textContent = beatNumber;
-        sottoContatoreVisivo.textContent =
-            suddivisione > 1 ? `${subdivisionNumber}/${suddivisione}` : '';
+    if (inizioBattito) {
+        triggerContatoreAnimation();
+        triggerBoxLight(isFirstBeat);
+    } else if (coloriAttivi) {
+        metronomoBox.classList.remove('attivo-battere', 'attivo-tempo');
+    }
+}
 
-        if (inizioBattito) {
-            triggerContatoreAnimation();
-            triggerBoxLight(isFirstBeat);
-        } else if (coloriAttivi) {
-            metronomoBox.classList.remove('attivo-battere', 'attivo-tempo');
+function runUiLoop(now) {
+    while (scheduledUiEvents.length > 0 && scheduledUiEvents[0].targetTime <= now + uiFrameLookaheadMs) {
+        const evento = scheduledUiEvents.shift();
+
+        if (!evento || evento.avvioId !== avvioCorrente) {
+            continue;
         }
-    }, delayMs);
 
-    uiTimeouts.push(t);
+        processScheduledUiEvent(evento.beatNumber, evento.subdivisionNumber);
+    }
+
+    if (!metronomoAttivo && scheduledUiEvents.length === 0) {
+        uiFrameId = null;
+        return;
+    }
+
+    uiFrameId = requestAnimationFrame(runUiLoop);
+}
+
+function ensureUiLoop() {
+    if (uiFrameId === null) {
+        uiFrameId = requestAnimationFrame(runUiLoop);
+    }
+}
+
+function aggiornaUiSchedulata(when, beatNumber, subdivisionNumber) {
+    scheduledUiEvents.push({
+        avvioId: avvioCorrente,
+        beatNumber,
+        subdivisionNumber,
+        targetTime: getPerformanceTimeForAudioTime(when) - visualAnticipoMs
+    });
+
+    ensureUiLoop();
 }
 
 function scheduleBeat(when, beatNumber, subdivisionNumber) {
@@ -224,6 +287,8 @@ async function avviaMetronomo() {
     aggiornaBottoneMetronomo();
     fermaScheduler();
     clearAllUiTimeouts();
+    clearScheduledUiEvents();
+    stopUiLoop();
     resetUIState();
 
     await context.resume();
@@ -244,6 +309,8 @@ function fermaMetronomo() {
 
     fermaScheduler();
     clearAllUiTimeouts();
+    clearScheduledUiEvents();
+    stopUiLoop();
 
     contatore = 1;
     currentBeatNumber = 1;
@@ -341,6 +408,10 @@ subdivisionSelect.addEventListener('change', () => {
     }
 });
 
+metronomeVolumeSlider.addEventListener('input', () => {
+    aggiornaVolumeMetronomo(metronomeVolumeSlider.value);
+});
+
 metronomeToggleBtn.addEventListener('click', () => {
     if (metronomoAttivo) {
         fermaMetronomo();
@@ -352,4 +423,5 @@ metronomeToggleBtn.addEventListener('click', () => {
 aggiornaVisualeBpm(bpm);
 aggiornaTempo(battitiPerMisura);
 aggiornaSuddivisione(suddivisione);
+aggiornaVolumeMetronomo(metronomeVolumeSlider.value);
 aggiornaBottoneMetronomo();
