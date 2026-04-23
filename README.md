@@ -6,6 +6,7 @@ MetroTuner e un'app web musicale pensata per studiare tempo, intonazione e rifer
 Unisce metronomo, accordatore e drone in una sola interfaccia, cosi da poter lavorare su esercizi tecnici, scale, arpeggi e studio di brani senza dover usare strumenti separati.
 
 Obiettivo
+
 L'obiettivo del progetto e offrire uno strumento pratico e immediato per musicisti che vogliono:
 
 - studiare con un metronomo preciso
@@ -16,6 +17,7 @@ L'obiettivo del progetto e offrire uno strumento pratico e immediato per musicis
 Funzioni principali
 
 Metronomo
+
 Il metronomo include:
 
 - selezione BPM con slider e input numerico
@@ -35,6 +37,7 @@ Il metronomo include:
 
 
 Accordatore  
+
 L'accordatore funziona tramite microfono e offre:
 
 - rilevamento della nota suonata
@@ -50,7 +53,8 @@ L'accordatore funziona tramite microfono e offre:
 
 Il valore di default e 442 Hz.
 
-Perche ci sono 2 modalita nell'accordatore  
+Perche ci sono 2 modalita nell'accordatore 
+
 L'accordatore include due modalita perche gli strumenti e le diverse altezze sonore non si comportano allo stesso modo.
 
 - la modalita "Standard" e pensata per registri medi e acuti, dove il rilevamento del pitch e in genere piu rapido e stabile
@@ -60,6 +64,7 @@ Questo rende l'accordatore piu affidabile sia per strumenti standard sia per str
 
 
 Drone
+
 Il drone e stato progettato come supporto per intonazione, scale e studio melodico.
 
 Caratteristiche:
@@ -95,6 +100,7 @@ Scale disponibili nel drone
 - Locria
 
 Note aggiuntive della scala
+
 Per ogni scala e possibile aggiungere note derivate dalla tonalita scelta.
 
 Funzioni disponibili:
@@ -110,6 +116,7 @@ Funzioni disponibili:
 - visualizzazione del solo nome della nota, senza numero di ottava
 
 Interfaccia
+
 L'interfaccia e organizzata in tre pannelli affiancati:
 
 - Metronomo
@@ -138,6 +145,7 @@ File principali:
 - "drone.js" -> logica del drone
 
 Migliorie implementate
+
 Durante lo sviluppo sono state introdotte varie ottimizzazioni:
 
 - pulizia di codice e stili non piu usati
@@ -150,6 +158,7 @@ Durante lo sviluppo sono state introdotte varie ottimizzazioni:
 - layout piu bilanciato per uso reale nello studio
 
 Utilizzo
+
 1. Apri il progetto in un browser moderno.
 2. Attiva il microfono se vuoi usare l'accordatore.
 3. Imposta BPM e suddivisione del metronomo.
@@ -159,6 +168,10 @@ Utilizzo
 
 Nota tecnica
 Per usare correttamente microfono e AudioWorklet e consigliato avviare il progetto tramite un piccolo server locale.
+
+Autore
+
+Creato da Paulo Montoya
 
 ---
 
@@ -170,6 +183,7 @@ MetroTuner is a music web app designed to practice rhythm, intonation, and harmo
 It combines metronome, tuner, and drone into one interface, allowing musicians to work on technical exercises, scales, arpeggios, and repertoire study without needing separate tools.
 
 Goal
+
 The goal of the project is to provide a practical and immediate tool for musicians who want to:
 
 - practice with a precise metronome
@@ -180,6 +194,7 @@ The goal of the project is to provide a practical and immediate tool for musicia
 Main features
 
 Metronome
+
 The metronome includes:
 
 - BPM selection with slider and numeric input
@@ -198,6 +213,7 @@ The metronome includes:
 - improved visual synchronization compared to the sound
 
 Tuner
+
 The tuner works through the microphone and provides:
 
 - played note detection
@@ -222,6 +238,7 @@ The tuner includes two modes because instruments and sound ranges do not behave 
 This makes the tuner more reliable both for standard instruments and for lower-pitched instruments or notes.
 
 Drone
+
 The drone was designed as a support tool for intonation, scales, and melodic practice.
 
 Features:
@@ -257,6 +274,7 @@ Available drone scales
 - Locrian
 
 Additional scale notes
+
 For each scale it is possible to add notes derived from the selected tonal center.
 
 Available functions:
@@ -272,6 +290,7 @@ Available functions:
 - display of note name only, without octave number
 
 Interface
+
 The interface is organized into three side-by-side panels:
 
 - Metronome
@@ -300,6 +319,7 @@ Main files:
 - "drone.js" -> drone logic
 
 Implemented improvements
+
 During development, several optimizations were introduced:
 
 - cleanup of unused code and styles
@@ -312,6 +332,7 @@ During development, several optimizations were introduced:
 - more balanced layout for real study use
 
 Usage
+
 1. Open the project in a modern browser.
 2. Enable the microphone if you want to use the tuner.
 3. Set BPM and subdivision on the metronome.
@@ -320,11 +341,12 @@ Usage
 6. Play or sing over the drone while checking intonation.
 
 Technical note
+
 To properly use microphone access and AudioWorklet, it is recommended to run the project through a small local server.
 
 
 ---
 
-## Author
+Author
 
 Created by Paulo Montoya.
