@@ -3,13 +3,52 @@ class PitchProcessor extends AudioWorkletProcessor {
         super();
 
         this.sampleRateValue = options?.processorOptions?.sampleRate || sampleRate;
-        this.bufferSize = 16384;
+        this.mode = options?.processorOptions?.mode === 'bassi' ? 'bassi' : 'standard';
+
+        this.prevRms = 0;
+        this.configureMode(this.mode);
+
+        this.port.onmessage = (event) => {
+            const data = event.data;
+
+            if (data?.type === 'setMode') {
+                this.configureMode(data.mode === 'bassi' ? 'bassi' : 'standard');
+            }
+        };
+    }
+
+    configureMode(mode) {
+        this.mode = mode;
+
+        if (mode === 'bassi') {
+            this.bufferSize = 16384;
+            this.analysisHop = 2048;
+            this.minFrequency = 20;
+            this.maxFrequency = 1500;
+            this.lowBandMaxFrequency = 220;
+            this.lowPassCutoff = 140;
+            this.fullThreshold = 0.20;
+            this.lowThreshold = 0.18;
+            this.lowResultMinClarity = 0.48;
+            this.octaveTolerance = 0.08;
+            this.attackRmsRiseThreshold = 0.0035;
+        } else {
+            this.bufferSize = 8192;
+            this.analysisHop = 1024;
+            this.minFrequency = 25;
+            this.maxFrequency = 5000;
+            this.lowBandMaxFrequency = 140;
+            this.lowPassCutoff = 180;
+            this.fullThreshold = 0.18;
+            this.lowThreshold = 0.20;
+            this.lowResultMinClarity = 0.52;
+            this.octaveTolerance = 0.05;
+            this.attackRmsRiseThreshold = 0.004;
+        }
+
         this.buffer = new Float32Array(this.bufferSize);
         this.writeIndex = 0;
-        this.analysisHop = 2048;
         this.samplesSinceLastAnalysis = 0;
-        this.minFrequency = 20;
-        this.maxFrequency = 5000;
         this.prevRms = 0;
     }
 
@@ -69,7 +108,7 @@ class PitchProcessor extends AudioWorkletProcessor {
         return out;
     }
 
-    yin(buffer, sampleRateValue, minFrequency = this.minFrequency, maxFrequency = this.maxFrequency, absoluteThreshold = 0.18) {
+    yin(buffer, sampleRateValue, minFrequency, maxFrequency, absoluteThreshold) {
         const halfBufferLength = Math.floor(buffer.length / 2);
         const yinBuffer = new Float32Array(halfBufferLength);
 
@@ -155,7 +194,7 @@ class PitchProcessor extends AudioWorkletProcessor {
         }
 
         if (!fullResult.pitch) {
-            if (lowResult.pitch && lowResult.clarity >= 0.52) {
+            if (lowResult.pitch && lowResult.clarity >= this.lowResultMinClarity) {
                 return lowResult;
             }
 
@@ -166,13 +205,14 @@ class PitchProcessor extends AudioWorkletProcessor {
             return fullResult;
         }
 
-        const nearOctave = Math.abs(fullResult.pitch - lowResult.pitch * 2) / (lowResult.pitch * 2) < 0.05;
+        const nearOctave =
+            Math.abs(fullResult.pitch - lowResult.pitch * 2) / (lowResult.pitch * 2) < this.octaveTolerance;
 
         if (
             nearOctave &&
             lowResult.pitch >= 20 &&
-            lowResult.pitch <= 120 &&
-            lowResult.clarity >= 0.5 &&
+            lowResult.pitch <= this.lowBandMaxFrequency &&
+            lowResult.clarity >= this.lowResultMinClarity &&
             lowResult.clarity >= fullResult.clarity * 0.8
         ) {
             return lowResult;
@@ -202,17 +242,34 @@ class PitchProcessor extends AudioWorkletProcessor {
             const analysisBuffer = new Float32Array(this.bufferSize);
             const tail = this.buffer.subarray(this.writeIndex);
             const head = this.buffer.subarray(0, this.writeIndex);
+
             analysisBuffer.set(tail, 0);
             analysisBuffer.set(head, tail.length);
 
             const rawRms = this.calculateRMS(analysisBuffer);
             const prepared = this.removeDCAndNormalize(analysisBuffer);
-            const fullResult = this.yin(prepared, this.sampleRateValue, 25, this.maxFrequency, 0.18);
-            const lowPrepared = this.lowPass(prepared, 140);
-            const lowResult = this.yin(lowPrepared, this.sampleRateValue, 20, 120, 0.2);
+
+            const fullResult = this.yin(
+                prepared,
+                this.sampleRateValue,
+                this.minFrequency,
+                this.maxFrequency,
+                this.fullThreshold
+            );
+
+            const lowPrepared = this.lowPass(prepared, this.lowPassCutoff);
+
+            const lowResult = this.yin(
+                lowPrepared,
+                this.sampleRateValue,
+                20,
+                this.lowBandMaxFrequency,
+                this.lowThreshold
+            );
+
             const result = this.choosePitch(fullResult, lowResult);
             const rmsRise = rawRms - this.prevRms;
-            const isAttack = rmsRise > 0.004;
+            const isAttack = rmsRise > this.attackRmsRiseThreshold;
 
             this.prevRms = rawRms;
 
