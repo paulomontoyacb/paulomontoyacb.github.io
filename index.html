@@ -18,7 +18,6 @@
     <section class="metronomo">
         <h2 class="panel-title">Metronomo</h2>
         <div class="contatore" id="contatoreVisivo">1</div>
-        <div class="sotto-contatore" id="sottoContatoreVisivo"></div>
 
         <div class="bpm-box">
             <div class="bpm-value"><span id="bpmValue">60</span> BPM</div>
@@ -53,6 +52,13 @@
                         <option value="6">Sestine</option>
                         <option value="7">Settimine</option>
                     </select>
+                </div>
+                <div class="opzione-riga">
+                    <label for="metronomeVolume">Volume</label>
+                    <div class="drone-volume-row">
+                        <input type="range" id="metronomeVolume" class="slider" min="0" max="100" value="50">
+                        <span class="drone-volume-value" id="metronomeVolumeValue">50%</span>
+                    </div>
                 </div>
                 <div class="opzione-riga">
                     <label for="coloriToggle">Colori visivi</label>
@@ -102,8 +108,8 @@
             <div class="opzione-riga">
                 <label for="tuningReference">Accordatura</label>
                 <select id="tuningReference" class="selettore-tempo">
-                    <option value="440" selected>La = 440 Hz</option>
-                    <option value="442">La = 442 Hz</option>
+                    <option value="440">La = 440 Hz</option>
+                    <option value="442" selected>La = 442 Hz</option>
                 </select>
             </div>
 
@@ -127,11 +133,214 @@
             <div>Stato: <strong id="tunerLockState">--</strong></div>
         </div>
 
-        <div class="accordatore-footer">
-            <p class="accordatore-hint">
-                Usa preferibilmente un microfono esterno.
-            </p>
+    </section>
+
+    <section class="drone">
+        <h2 class="panel-title">Drone</h2>
+
+        <div class="drone-display">
+            <div class="drone-note" id="droneCurrentNote">Do</div>
+            <div class="drone-mode" id="droneCurrentMode">Scala maggiore</div>
         </div>
+
+        <div class="controlli drone-controlli">
+            <button type="button" id="droneToggleBtn">Accendi drone</button>
+        </div>
+
+        <div class="opzioni drone-opzioni">
+            <div class="opzione-riga">
+                <label for="droneNote">Nota</label>
+                <select id="droneNote" class="selettore-tempo">
+                    <option value="C" selected>Do</option>
+                    <option value="C#">Do#</option>
+                    <option value="D">Re</option>
+                    <option value="D#">Re#</option>
+                    <option value="E">Mi</option>
+                    <option value="F">Fa</option>
+                    <option value="F#">Fa#</option>
+                    <option value="G">Sol</option>
+                    <option value="G#">Sol#</option>
+                    <option value="A">La</option>
+                    <option value="A#">La#</option>
+                    <option value="B">Si</option>
+                </select>
+            </div>
+
+            <div class="opzione-riga">
+                <label for="droneOctave">Ottava</label>
+                <select id="droneOctave" class="selettore-tempo">
+                    <option value="1">1</option>
+                    <option value="2" selected>2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                </select>
+            </div>
+
+            <div class="opzione-riga">
+                <label for="droneScaleMode">Scala</label>
+                <select id="droneScaleMode" class="selettore-tempo">
+                    <option value="major" selected>Maggiore</option>
+                    <option value="minorNatural">Minore naturale</option>
+                    <option value="minorHarmonic">Minore armonica</option>
+                    <option value="minorMelodic">Minore melodica</option>
+                    <option value="majorPentatonic">Pentatonica maggiore</option>
+                    <option value="minorPentatonic">Pentatonica minore</option>
+                    <option value="blues">Blues</option>
+                    <option value="ionian">Ionia</option>
+                    <option value="dorian">Dorica</option>
+                    <option value="phrygian">Frigia</option>
+                    <option value="lydian">Lidia</option>
+                    <option value="mixolydian">Misolidia</option>
+                    <option value="aeolian">Eolia</option>
+                    <option value="locrian">Locria</option>
+                </select>
+            </div>
+
+            <div class="opzione-riga">
+                <label for="droneVolume">Volume</label>
+                <div class="drone-volume-row">
+                    <input type="range" id="droneVolume" class="slider" min="0" max="100" value="50">
+                    <span class="drone-volume-value" id="droneVolumeValue">50%</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="drone-degree-block">
+            <div class="drone-degree-header">
+                <div class="drone-degree-title">Note aggiunte della scala</div>
+                <button type="button" id="droneClearDegreesBtn" class="drone-clear-btn">Cancella</button>
+            </div>
+            <div class="drone-degree-grid">
+                <div class="drone-degree-option">
+                    <label class="drone-degree-main" for="droneDegree2">
+                        <input type="checkbox" id="droneDegree2" class="check-accento">
+                        <div class="drone-degree-text">
+                            <span class="drone-degree-name" id="droneDegree2Name">2a</span>
+                            <span class="drone-degree-note" id="droneDegree2Label">Si3</span>
+                        </div>
+                    </label>
+                    <label class="drone-degree-octave" for="droneDegree2High">
+                        <span>8va</span>
+                        <input type="checkbox" id="droneDegree2High" class="check-accento">
+                    </label>
+                    <label class="drone-degree-octave" for="droneDegree2DoubleHigh">
+                        <span>15ma</span>
+                        <input type="checkbox" id="droneDegree2DoubleHigh" class="check-accento">
+                    </label>
+                </div>
+
+                <div class="drone-degree-option">
+                    <label class="drone-degree-main" for="droneDegree3">
+                        <input type="checkbox" id="droneDegree3" class="check-accento">
+                        <div class="drone-degree-text">
+                            <span class="drone-degree-name" id="droneDegree3Name">3a</span>
+                            <span class="drone-degree-note" id="droneDegree3Label">Do#4</span>
+                        </div>
+                    </label>
+                    <label class="drone-degree-octave" for="droneDegree3High">
+                        <span>8va</span>
+                        <input type="checkbox" id="droneDegree3High" class="check-accento">
+                    </label>
+                    <label class="drone-degree-octave" for="droneDegree3DoubleHigh">
+                        <span>15ma</span>
+                        <input type="checkbox" id="droneDegree3DoubleHigh" class="check-accento">
+                    </label>
+                </div>
+
+                <div class="drone-degree-option">
+                    <label class="drone-degree-main" for="droneDegree4">
+                        <input type="checkbox" id="droneDegree4" class="check-accento">
+                        <div class="drone-degree-text">
+                            <span class="drone-degree-name" id="droneDegree4Name">4a</span>
+                            <span class="drone-degree-note" id="droneDegree4Label">Re4</span>
+                        </div>
+                    </label>
+                    <label class="drone-degree-octave" for="droneDegree4High">
+                        <span>8va</span>
+                        <input type="checkbox" id="droneDegree4High" class="check-accento">
+                    </label>
+                    <label class="drone-degree-octave" for="droneDegree4DoubleHigh">
+                        <span>15ma</span>
+                        <input type="checkbox" id="droneDegree4DoubleHigh" class="check-accento">
+                    </label>
+                </div>
+
+                <div class="drone-degree-option">
+                    <label class="drone-degree-main" for="droneDegree5">
+                        <input type="checkbox" id="droneDegree5" class="check-accento">
+                        <div class="drone-degree-text">
+                            <span class="drone-degree-name" id="droneDegree5Name">5a</span>
+                            <span class="drone-degree-note" id="droneDegree5Label">Mi4</span>
+                        </div>
+                    </label>
+                    <label class="drone-degree-octave" for="droneDegree5High">
+                        <span>8va</span>
+                        <input type="checkbox" id="droneDegree5High" class="check-accento">
+                    </label>
+                    <label class="drone-degree-octave" for="droneDegree5DoubleHigh">
+                        <span>15ma</span>
+                        <input type="checkbox" id="droneDegree5DoubleHigh" class="check-accento">
+                    </label>
+                </div>
+
+                <div class="drone-degree-option">
+                    <label class="drone-degree-main" for="droneDegree6">
+                        <input type="checkbox" id="droneDegree6" class="check-accento">
+                        <div class="drone-degree-text">
+                            <span class="drone-degree-name" id="droneDegree6Name">6a</span>
+                            <span class="drone-degree-note" id="droneDegree6Label">Fa#4</span>
+                        </div>
+                    </label>
+                    <label class="drone-degree-octave" for="droneDegree6High">
+                        <span>8va</span>
+                        <input type="checkbox" id="droneDegree6High" class="check-accento">
+                    </label>
+                    <label class="drone-degree-octave" for="droneDegree6DoubleHigh">
+                        <span>15ma</span>
+                        <input type="checkbox" id="droneDegree6DoubleHigh" class="check-accento">
+                    </label>
+                </div>
+
+                <div class="drone-degree-option">
+                    <label class="drone-degree-main" for="droneDegree7">
+                        <input type="checkbox" id="droneDegree7" class="check-accento">
+                        <div class="drone-degree-text">
+                            <span class="drone-degree-name" id="droneDegree7Name">7a</span>
+                            <span class="drone-degree-note" id="droneDegree7Label">Sol#4</span>
+                        </div>
+                    </label>
+                    <label class="drone-degree-octave" for="droneDegree7High">
+                        <span>8va</span>
+                        <input type="checkbox" id="droneDegree7High" class="check-accento">
+                    </label>
+                    <label class="drone-degree-octave" for="droneDegree7DoubleHigh">
+                        <span>15ma</span>
+                        <input type="checkbox" id="droneDegree7DoubleHigh" class="check-accento">
+                    </label>
+                </div>
+
+                <div class="drone-degree-option">
+                    <label class="drone-degree-main" for="droneDegree8">
+                        <input type="checkbox" id="droneDegree8" class="check-accento">
+                        <div class="drone-degree-text">
+                            <span class="drone-degree-name" id="droneDegree8Name">8a</span>
+                            <span class="drone-degree-note" id="droneDegree8Label">La4</span>
+                        </div>
+                    </label>
+                    <label class="drone-degree-octave" for="droneDegree8High">
+                        <span>8va</span>
+                        <input type="checkbox" id="droneDegree8High" class="check-accento">
+                    </label>
+                    <label class="drone-degree-octave" for="droneDegree8DoubleHigh">
+                        <span>15ma</span>
+                        <input type="checkbox" id="droneDegree8DoubleHigh" class="check-accento">
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div class="drone-status" id="droneStatus">Pronto.</div>
     </section>
 </main>
 
@@ -141,6 +350,7 @@
 
 <script src="metro2.js"></script>
 <script src="accordatore.js"></script>
+<script src="drone.js"></script>
 
 </body>
 </html>
